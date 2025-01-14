@@ -1,6 +1,8 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 
 public class MorseCodeConverter {
     private static final Map<String, String> morseCodeMap = new HashMap<>();
@@ -32,7 +34,6 @@ public class MorseCodeConverter {
         morseCodeMap.put("-..-", "X");
         morseCodeMap.put("-.--", "Y");
         morseCodeMap.put("--..", "Z");
-
         morseCodeMap.put("-----", "0");
         morseCodeMap.put(".----", "1");
         morseCodeMap.put("..---", "2");
@@ -47,42 +48,56 @@ public class MorseCodeConverter {
 
     public static String convertMorseToText(String morseCode) {
         StringBuilder result = new StringBuilder();
-        String[] words = morseCode.split("   ");
-
-        for (String word : words) {
-            String[] letters = word.split(" ");
-            for (String letter : letters) {
-                String decodedLetter = morseCodeMap.get(letter);
-                if (decodedLetter != null) {
-                    result.append(decodedLetter);
-                } else {
-                    result.append("?");
-                }
+        for (String word : morseCode.split(" {3}")) {
+            for (String letter : word.split(" ")) {
+                result.append(morseCodeMap.getOrDefault(letter, "?"));
             }
             result.append(" ");
         }
-
         return result.toString().trim();
     }
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+        } catch (Exception ignored) {}
 
-        System.out.println("Enter Morse code (separate letters with a space and words with three spaces):");
-        String userInput = scanner.nextLine();
+        JFrame frame = new JFrame("Morse Code Converter");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600, 500);
+        frame.setLocationRelativeTo(null);
 
-        String convertedText = convertMorseToText(userInput);
-        System.out.println("Converted Text: " + convertedText);
+        JPanel panel = new JPanel(new BorderLayout(15, 15));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        scanner.close();
+        JTextArea inputArea = new JTextArea(5, 40);
+        inputArea.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        inputArea.setLineWrap(true);
+        inputArea.setWrapStyleWord(true);
+        inputArea.setBorder(BorderFactory.createTitledBorder("Enter Morse Code"));
+        panel.add(new JScrollPane(inputArea), BorderLayout.NORTH);
+
+        JTextArea outputArea = new JTextArea(5, 40);
+        outputArea.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        outputArea.setLineWrap(true);
+        outputArea.setWrapStyleWord(true);
+        outputArea.setEditable(false);
+        outputArea.setBorder(BorderFactory.createTitledBorder("Converted Text"));
+        panel.add(new JScrollPane(outputArea), BorderLayout.CENTER);
+
+        JButton convertButton = new JButton("Convert");
+        convertButton.setFont(new Font("SansSerif", Font.BOLD, 16));
+        convertButton.setPreferredSize(new Dimension(120, 40));
+        convertButton.addActionListener((ActionEvent e) -> {
+            String morseCode = inputArea.getText().trim();
+            outputArea.setText(convertMorseToText(morseCode));
+        });
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.add(convertButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        frame.add(panel);
+        frame.setVisible(true);
     }
 }
-
-
-/*
-Test Cases
-    HELLO WORLD -> .... . .-.. .-.. ---   .-- --- .-. .-.. -..
-    12345 67890 -> .---- ..--- ...-- ....- .....   -.... --... ---.. ----. -----
-    THERE IS NO PLACE LIKE HOME -> - .... . .-. .   .. ...   -. ---   .--. .-.. .- -.-. .   .-.. .. -.- .   .... --- -- .
-    HELLO WORLD 1 2 3 4 ? ? -> .... . .-.. .-.. ---   .-- --- .-. .-.. -..   .----   ..---   ...--   ....-   -.-.--   -..-. 
-*/
